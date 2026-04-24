@@ -35,6 +35,7 @@ function NavContent() {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={true}
             className={`flex flex-col items-center gap-1 transition-colors min-w-0 ${
               isActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
             }`}
