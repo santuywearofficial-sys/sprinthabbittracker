@@ -8,7 +8,7 @@ const withPWA = require('next-pwa')({
 })
 
 const nextConfig: NextConfig = {
-  // No additional config needed
+  turbopack: {}, // Silence Turbopack warning
 }
 
 module.exports = withPWA(nextConfig)

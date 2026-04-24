@@ -89,8 +89,13 @@ export default function DashboardClient({
   const [loading, setLoading] = useState<string | null>(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const searchParams = useSearchParams()
+  const router = useRouter()
   const activeTab = searchParams.get('tab') === 'checkin' ? 'checkin' : 'overview'
   const supabase = createClient()
+
+  const setActiveTab = (tab: string) => {
+    router.push(`/dashboard?tab=${tab}`)
+  }
 
   const habits = sprint?.sprint_habits?.map(sh => sh.habits) || []
   const completedCount = habits.filter(h => logs.some(l => l.habit_id === h.id && l.completed)).length

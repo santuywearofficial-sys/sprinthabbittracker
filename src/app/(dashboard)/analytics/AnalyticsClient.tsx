@@ -202,7 +202,7 @@ export default function AnalyticsClient({ logs, habits, sprints, streak, fromDat
                   <XAxis dataKey="sprint" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
                   <YAxis hide domain={[0, 100]} />
                   <Tooltip
-                    formatter={(val: number) => [`${val}%`, 'Completion']}
+                    formatter={(val) => [`${val}%`, 'Completion']}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   />
                   <Area type="monotone" dataKey="rate" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#sprintGrad)" />

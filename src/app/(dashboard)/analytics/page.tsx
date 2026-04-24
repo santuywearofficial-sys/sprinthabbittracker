@@ -23,9 +23,9 @@ export default async function AnalyticsPage() {
 
   const { data: habits } = await supabase
     .from('habits')
-    .select('id, title, category_id, habit_categories(name, color)')
+    .select('id, title, category_id, habit_categories!inner(name, color)')
     .eq('user_id', user.id)
-    .is('deleted_at', null)
+    .is('deleted_at', null) as { data: any[] | null }
 
   const { data: sprints } = await supabase
     .from('sprints')
