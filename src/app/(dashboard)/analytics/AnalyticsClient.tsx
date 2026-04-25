@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { HABIT_CATEGORIES } from '@/constants/habits'
-import { Flame, Trophy, BarChart3, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { Flame, Trophy, BarChart3, ChevronLeft, ChevronRight, Calendar, Download } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
 // Lazy load Recharts
@@ -194,6 +194,31 @@ export default function AnalyticsClient({ logs, habits, sprints, streak, fromDat
 
   const completedSprints = sprints.filter(s => s.status === 'completed')
 
+  const exportMonthCSV = () => {
+    const rows = [['Tanggal', 'Habit', 'Kategori', 'Status']]
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      if (dateStr > today) continue
+      for (const habit of habits) {
+        const done = monthLogs.some(l => l.habit_id === habit.id && l.logged_date === dateStr && l.completed)
+        rows.push([
+          dateStr,
+          habit.title,
+          habit.habit_categories.name,
+          done ? 'Selesai' : 'Tidak Selesai',
+        ])
+      }
+    }
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `habit-log-${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const getHeatColor = (rate: number, isFuture: boolean) => {
     if (isFuture) return 'bg-slate-50 border border-slate-100'
     if (rate === 0) return 'bg-slate-100'
@@ -250,9 +275,19 @@ export default function AnalyticsClient({ logs, habits, sprints, streak, fromDat
           <h2 className="text-lg font-bold text-slate-800">
             {MONTH_NAMES[selectedMonth]} {selectedYear}
           </h2>
-          {selectedYear === now.getFullYear() && selectedMonth === now.getMonth() && (
-            <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Bulan ini</span>
-          )}
+          <div className="flex items-center gap-2">
+            {selectedYear === now.getFullYear() && selectedMonth === now.getMonth() && (
+              <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Bulan ini</span>
+            )}
+            <button
+              onClick={exportMonthCSV}
+              disabled={habits.length === 0}
+              className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full transition-colors disabled:opacity-40"
+            >
+              <Download size={12} />
+              Export CSV
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}

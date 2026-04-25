@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LogOut, User, Trophy, ChevronRight, Shield } from 'lucide-react'
+import { LogOut, User, Trophy, ChevronRight, Shield, Moon, Sun, Download } from 'lucide-react'
+import { useTheme } from '@/components/ThemeProvider'
 
 interface Badge {
   id: string
@@ -19,6 +20,7 @@ interface Props {
   sprintCount: number
   habitCount: number
   isAdmin: boolean
+  userId: string
 }
 
 const BADGE_INFO: Record<string, { label: string; icon: string; desc: string }> = {
@@ -30,13 +32,56 @@ const BADGE_INFO: Record<string, { label: string; icon: string; desc: string }> 
   perfect_sprint: { label: 'Perfect Sprint', icon: '🎯', desc: '100% completion rate' },
 }
 
-export default function SettingsClient({ profile, email, badges, sprintCount, habitCount, isAdmin }: Props) {
+export default function SettingsClient({ profile, email, badges, sprintCount, habitCount, isAdmin, userId }: Props) {
   const [loading, setLoading] = useState(false)
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const { theme, toggleTheme } = useTheme()
+
+  const handleExportCSV = async () => {
+    setExporting(true)
+    try {
+      // Fetch all habit logs
+      const { data: logs } = await supabase
+        .from('habit_logs')
+        .select('logged_date, completed, habits(title, habit_categories(name))')
+        .eq('user_id', userId)
+        .order('logged_date', { ascending: false }) as any
+
+      if (!logs || logs.length === 0) {
+        alert('Belum ada data untuk diekspor.')
+        return
+      }
+
+      // Build CSV
+      const rows = [['Tanggal', 'Habit', 'Kategori', 'Status']]
+      for (const log of logs) {
+        rows.push([
+          log.logged_date,
+          log.habits?.title || '-',
+          log.habits?.habit_categories?.name || '-',
+          log.completed ? 'Selesai' : 'Tidak Selesai',
+        ])
+      }
+
+      const csv = rows.map(r => r.map(cell => `"${cell}"`).join(',')).join('\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `sprint-tracker-export-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      alert('Gagal mengekspor data.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const handleLogout = async () => {
     setLoading(true)
@@ -66,8 +111,7 @@ export default function SettingsClient({ profile, email, badges, sprintCount, ha
       </header>
 
       <div className="max-w-2xl mx-auto px-6 pt-5 space-y-5">
-        {/* Avatar & Stats */}
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-200">
+        {/* Avatar & Stats */}        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-200">
           <div className="flex items-center gap-4 mb-5">
             <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-bold">
               {(profile?.full_name || email)[0].toUpperCase()}
@@ -168,15 +212,15 @@ export default function SettingsClient({ profile, email, badges, sprintCount, ha
         {isAdmin && (
           <Link
             href="/admin"
-            className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm block"
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl overflow-hidden shadow-sm block"
           >
-            <div className="flex items-center justify-between px-5 py-4 hover:bg-purple-50 transition-colors">
+            <div className="flex items-center justify-between px-5 py-4 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center">
+                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/40 rounded-xl flex items-center justify-center">
                   <Shield size={16} className="text-purple-600" />
                 </div>
                 <div>
-                  <span className="font-semibold text-sm text-slate-800">Admin Dashboard</span>
+                  <span className="font-semibold text-sm text-slate-800 dark:text-slate-100">Admin Dashboard</span>
                   <p className="text-xs text-slate-400">Kelola users & aktivitas</p>
                 </div>
               </div>
@@ -184,6 +228,49 @@ export default function SettingsClient({ profile, email, badges, sprintCount, ha
             </div>
           </Link>
         )}
+
+        {/* Dark Mode Toggle */}
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl overflow-hidden shadow-sm">
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center">
+                {theme === 'dark' ? <Sun size={16} className="text-amber-500" /> : <Moon size={16} className="text-slate-600" />}
+              </div>
+              <div className="text-left">
+                <span className="font-semibold text-sm text-slate-800 dark:text-slate-100">
+                  {theme === 'dark' ? 'Mode Terang' : 'Mode Gelap'}
+                </span>
+                <p className="text-xs text-slate-400">Sekarang: {theme === 'dark' ? 'Dark' : 'Light'}</p>
+              </div>
+            </div>
+            <div className={`w-11 h-6 rounded-full transition-colors relative ${theme === 'dark' ? 'bg-blue-600' : 'bg-slate-200'}`}>
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${theme === 'dark' ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </div>
+          </button>
+        </div>
+
+        {/* Export Data */}
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl overflow-hidden shadow-sm">
+          <button
+            onClick={handleExportCSV}
+            disabled={exporting}
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/40 rounded-xl flex items-center justify-center">
+                <Download size={16} className="text-emerald-600" />
+              </div>
+              <div className="text-left">
+                <span className="font-semibold text-sm text-slate-800 dark:text-slate-100">Export Data</span>
+                <p className="text-xs text-slate-400">Download semua habit log (.csv)</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-slate-300" />
+          </button>
+        </div>
 
         {/* Logout */}
         <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">

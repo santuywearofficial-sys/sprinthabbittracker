@@ -50,6 +50,7 @@ export default async function SettingsPage() {
       sprintCount={sprintCountResult.count || 0}
       habitCount={habitCountResult.count || 0}
       isAdmin={isAdmin}
+      userId={user.id}
     />
   )
 }
