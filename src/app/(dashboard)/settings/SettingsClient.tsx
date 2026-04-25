@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { LogOut, User, Trophy, Flame, Target, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import { LogOut, User, Trophy, ChevronRight, Shield } from 'lucide-react'
 
 interface Badge {
   id: string
@@ -17,6 +18,7 @@ interface Props {
   badges: Badge[]
   sprintCount: number
   habitCount: number
+  isAdmin: boolean
 }
 
 const BADGE_INFO: Record<string, { label: string; icon: string; desc: string }> = {
@@ -28,7 +30,7 @@ const BADGE_INFO: Record<string, { label: string; icon: string; desc: string }> 
   perfect_sprint: { label: 'Perfect Sprint', icon: '🎯', desc: '100% completion rate' },
 }
 
-export default function SettingsClient({ profile, email, badges, sprintCount, habitCount }: Props) {
+export default function SettingsClient({ profile, email, badges, sprintCount, habitCount, isAdmin }: Props) {
   const [loading, setLoading] = useState(false)
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [saving, setSaving] = useState(false)
@@ -161,6 +163,27 @@ export default function SettingsClient({ profile, email, badges, sprintCount, ha
             })}
           </div>
         </div>
+
+        {/* Admin Dashboard Button — only for admins */}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm block"
+          >
+            <div className="flex items-center justify-between px-5 py-4 hover:bg-purple-50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <Shield size={16} className="text-purple-600" />
+                </div>
+                <div>
+                  <span className="font-semibold text-sm text-slate-800">Admin Dashboard</span>
+                  <p className="text-xs text-slate-400">Kelola users & aktivitas</p>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-slate-300" />
+            </div>
+          </Link>
+        )}
 
         {/* Logout */}
         <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">

@@ -8,7 +8,7 @@ export default async function SettingsPage() {
   if (!user) redirect('/login')
 
   // Run all queries in parallel
-  const [profileResult, badgesResult, sprintCountResult, habitCountResult] = await Promise.all([
+  const [profileResult, badgesResult, sprintCountResult, habitCountResult, roleResult] = await Promise.all([
     supabase
       .from('users')
       .select('*')
@@ -32,7 +32,15 @@ export default async function SettingsPage() {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .is('deleted_at', null),
+
+    supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single(),
   ])
+
+  const isAdmin = roleResult.data?.role === 'admin'
 
   return (
     <SettingsClient
@@ -41,6 +49,7 @@ export default async function SettingsPage() {
       badges={badgesResult.data || []}
       sprintCount={sprintCountResult.count || 0}
       habitCount={habitCountResult.count || 0}
+      isAdmin={isAdmin}
     />
   )
 }
