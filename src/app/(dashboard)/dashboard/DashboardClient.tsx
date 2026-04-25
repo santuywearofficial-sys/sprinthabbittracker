@@ -270,7 +270,15 @@ export default function DashboardClient({
               <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center">
                 <p className="text-4xl mb-3">🏃</p>
                 <p className="text-slate-700 font-semibold mb-1">Belum ada sprint aktif</p>
-                <a href="/sprint" className="text-blue-600 text-sm">Buat sprint baru →</a>
+                <p className="text-slate-500 text-sm mb-4">Buat sprint untuk mulai melacak habit kamu</p>
+                <div className="flex flex-col gap-2">
+                  <a href="/habits" className="bg-blue-600 text-white text-sm font-bold px-4 py-2.5 rounded-2xl hover:bg-blue-700 transition-colors">
+                    + Tambah Habit Dulu
+                  </a>
+                  <a href="/sprint" className="border border-blue-600 text-blue-600 text-sm font-bold px-4 py-2.5 rounded-2xl hover:bg-blue-50 transition-colors">
+                    Buat Sprint →
+                  </a>
+                </div>
               </div>
             )}
           </>

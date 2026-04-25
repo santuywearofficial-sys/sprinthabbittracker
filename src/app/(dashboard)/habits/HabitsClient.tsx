@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { HABIT_CATEGORIES } from '@/constants/habits'
-import { Heart, Brain, Dumbbell, Home, Users, TrendingUp, Plus, Trash2 } from 'lucide-react'
+import { Heart, Brain, Dumbbell, Home, Users, TrendingUp, Plus, Trash2, Flame } from 'lucide-react'
 
 interface Category {
   id: number
@@ -28,6 +28,7 @@ interface Props {
   categories: Category[]
   userId: string
   lockedHabitIds: string[]
+  habitStreaks: Record<string, number>
 }
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -57,7 +58,7 @@ const categoryText: Record<string, string> = {
   Wealthset: 'text-amber-600',
 }
 
-export default function HabitsClient({ habits, categories, userId, lockedHabitIds }: Props) {
+export default function HabitsClient({ habits, categories, userId, lockedHabitIds, habitStreaks }: Props) {
   const [showAdd, setShowAdd] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newCategoryId, setNewCategoryId] = useState(1)
@@ -258,10 +259,18 @@ export default function HabitsClient({ habits, categories, userId, lockedHabitId
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-slate-800 text-sm font-semibold truncate">{habit.title}</p>
-                        <p className="text-slate-400 text-xs mt-0.5">
-                          {habit.frequency === 'daily' ? 'Harian' : `${habit.weekly_target}x/minggu`}
-                          {isLocked && ' · 🔒 Dikunci sprint'}
-                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-slate-400 text-xs">
+                            {habit.frequency === 'daily' ? 'Harian' : `${habit.weekly_target}x/minggu`}
+                            {isLocked && ' · 🔒 Dikunci sprint'}
+                          </p>
+                          {(habitStreaks[habit.id] || 0) > 0 && (
+                            <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">
+                              <Flame size={10} className="fill-amber-500 text-amber-500" />
+                              {habitStreaks[habit.id]}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
