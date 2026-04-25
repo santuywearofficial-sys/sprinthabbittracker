@@ -10,29 +10,52 @@ export default async function DashboardPage() {
 
   const today = new Date().toISOString().split('T')[0]
 
-  // Active sprint with habits
-  const { data: sprint } = await supabase
-    .from('sprints')
-    .select('*, sprint_habits(*, habits(*, habit_categories(*)))')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
+  // Run independent queries in parallel
+  const [sprintResult, todayLogsResult, profileResult, allHabitsResult] = await Promise.all([
+    supabase
+      .from('sprints')
+      .select('*, sprint_habits(*, habits(*, habit_categories(*)))')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single(),
 
-  // Today's logs
-  const { data: todayLogs } = await supabase
+    supabase
+      .from('habit_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('logged_date', today),
+
+    supabase
+      .from('users')
+      .select('full_name, timezone')
+      .eq('id', user.id)
+      .single(),
+
+    supabase
+      .from('habits')
+      .select('id')
+      .eq('user_id', user.id)
+      .is('deleted_at', null),
+  ])
+
+  const sprint = sprintResult.data
+  const todayLogs = todayLogsResult.data || []
+  const profile = profileResult.data
+  const totalHabits = allHabitsResult.data?.length || 0
+
+  // Single batch query for last 12 months of logs
+  const twelveMonthsAgo = new Date()
+  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
+  const fromDate = twelveMonthsAgo.toISOString().split('T')[0]
+
+  const { data: allLogs } = await supabase
     .from('habit_logs')
-    .select('*')
+    .select('logged_date, completed')
     .eq('user_id', user.id)
-    .eq('logged_date', today)
+    .gte('logged_date', fromDate)
+    .eq('completed', true)
 
-  // User profile
-  const { data: profile } = await supabase
-    .from('users')
-    .select('full_name, timezone')
-    .eq('id', user.id)
-    .single()
-
-  // Monthly data (last 12 months)
+  // Build monthly data from single query result
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
   const monthlyData = []
   for (let i = 11; i >= 0; i--) {
@@ -43,47 +66,22 @@ export default async function DashboardPage() {
     const firstDay = `${year}-${String(month + 1).padStart(2, '0')}-01`
     const lastDay = `${year}-${String(month + 1).padStart(2, '0')}-${new Date(year, month + 1, 0).getDate()}`
 
-    const { data: monthLogs } = await supabase
-      .from('habit_logs')
-      .select('completed')
-      .eq('user_id', user.id)
-      .gte('logged_date', firstDay)
-      .lte('logged_date', lastDay)
-      .eq('completed', true)
-
-    const { data: monthHabits } = await supabase
-      .from('habits')
-      .select('id')
-      .eq('user_id', user.id)
-      .is('deleted_at', null)
-
+    const monthLogs = allLogs?.filter(l => l.logged_date >= firstDay && l.logged_date <= lastDay) || []
     const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const totalPossible = (monthHabits?.length || 0) * daysInMonth
-    const progress = totalPossible > 0 ? Math.round(((monthLogs?.length || 0) / totalPossible) * 100) : 0
+    const totalPossible = totalHabits * daysInMonth
+    const progress = totalPossible > 0 ? Math.round((monthLogs.length / totalPossible) * 100) : 0
 
     monthlyData.push({ month: monthNames[month], progress })
   }
 
-  // Streak calculation
+  // Calculate streak from already-fetched logs (no extra queries)
   let streak = 0
-  const checkDate = new Date()
-  const { data: allHabits } = await supabase
-    .from('habits')
-    .select('id')
-    .eq('user_id', user.id)
-    .is('deleted_at', null)
-
-  const totalHabits = allHabits?.length || 0
-  if (totalHabits > 0) {
-    for (let i = 0; i < 365; i++) {
+  if (totalHabits > 0 && allLogs) {
+    const checkDate = new Date()
+    for (let i = 0; i < 60; i++) { // max 60 days streak check
       const dateStr = checkDate.toISOString().split('T')[0]
-      const { data: dayLogs } = await supabase
-        .from('habit_logs')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('logged_date', dateStr)
-        .eq('completed', true)
-      const rate = ((dayLogs?.length || 0) / totalHabits) * 100
+      const dayLogs = allLogs.filter(l => l.logged_date === dateStr)
+      const rate = (dayLogs.length / totalHabits) * 100
       if (rate >= 80) {
         streak++
         checkDate.setDate(checkDate.getDate() - 1)
@@ -95,7 +93,7 @@ export default async function DashboardPage() {
     <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
       <DashboardClient
         sprint={sprint}
-        todayLogs={todayLogs || []}
+        todayLogs={todayLogs}
         userId={user.id}
         profile={profile}
         today={today}

@@ -345,38 +345,6 @@ export default function DashboardClient({
           </section>
         )}
       </main>
-
-      {/* Tab switcher nav — hanya untuk dashboard internal tabs */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-3 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <div className="max-w-2xl mx-auto flex justify-around items-center">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'overview' ? 'text-blue-600' : 'text-slate-400'}`}
-          >
-            <LayoutDashboard size={22} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Overview</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('checkin')}
-            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'checkin' ? 'text-blue-600' : 'text-slate-400'}`}
-          >
-            <CheckCircle2 size={22} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Check-in</span>
-          </button>
-          <a href="/habits" className="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors">
-            <Plus size={22} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Habits</span>
-          </a>
-          <a href="/sprint" className="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors">
-            <Flame size={22} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Sprint</span>
-          </a>
-          <a href="/analytics" className="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors">
-            <Trophy size={22} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Stats</span>
-          </a>
-        </div>
-      </div>
     </div>
   )
 }
