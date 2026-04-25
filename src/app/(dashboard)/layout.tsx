@@ -8,10 +8,12 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
 
+  // Single auth check — profile fetch happens in each page
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Check onboarding in parallel with user fetch (already done above)
   const { data: profile } = await supabase
     .from('users')
     .select('onboarding_completed')

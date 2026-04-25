@@ -4,13 +4,20 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { HABIT_CATEGORIES } from '@/constants/habits'
 import { useSearchParams, useRouter } from 'next/navigation'
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts'
+import dynamic from 'next/dynamic'
 import {
   Flame, Trophy, Heart, Brain, Dumbbell, Home, Users, TrendingUp,
   CheckCircle2, ChevronRight, BarChart3, Plus, LayoutDashboard
 } from 'lucide-react'
+
+// Lazy load Recharts — heavy library, don't block initial render
+const AreaChart = dynamic(() => import('recharts').then(m => ({ default: m.AreaChart })), { ssr: false })
+const Area = dynamic(() => import('recharts').then(m => ({ default: m.Area })), { ssr: false })
+const XAxis = dynamic(() => import('recharts').then(m => ({ default: m.XAxis })), { ssr: false })
+const YAxis = dynamic(() => import('recharts').then(m => ({ default: m.YAxis })), { ssr: false })
+const CartesianGrid = dynamic(() => import('recharts').then(m => ({ default: m.CartesianGrid })), { ssr: false })
+const Tooltip = dynamic(() => import('recharts').then(m => ({ default: m.Tooltip })), { ssr: false })
+const ResponsiveContainer = dynamic(() => import('recharts').then(m => ({ default: m.ResponsiveContainer })), { ssr: false })
 
 interface HabitLog {
   id: string

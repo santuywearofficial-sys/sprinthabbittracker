@@ -2,7 +2,16 @@
 
 import { HABIT_CATEGORIES } from '@/constants/habits'
 import { Flame, Trophy, BarChart3 } from 'lucide-react'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import dynamic from 'next/dynamic'
+
+// Lazy load Recharts — heavy library, don't block initial render
+const AreaChart = dynamic(() => import('recharts').then(m => ({ default: m.AreaChart })), { ssr: false })
+const Area = dynamic(() => import('recharts').then(m => ({ default: m.Area })), { ssr: false })
+const XAxis = dynamic(() => import('recharts').then(m => ({ default: m.XAxis })), { ssr: false })
+const YAxis = dynamic(() => import('recharts').then(m => ({ default: m.YAxis })), { ssr: false })
+const CartesianGrid = dynamic(() => import('recharts').then(m => ({ default: m.CartesianGrid })), { ssr: false })
+const Tooltip = dynamic(() => import('recharts').then(m => ({ default: m.Tooltip })), { ssr: false })
+const ResponsiveContainer = dynamic(() => import('recharts').then(m => ({ default: m.ResponsiveContainer })), { ssr: false })
 
 interface Log {
   logged_date: string
